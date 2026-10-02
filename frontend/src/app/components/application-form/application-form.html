@@ -1,0 +1,70 @@
+<form class="card" [formGroup]="form" (ngSubmit)="submit()">
+  <h2>Nueva solicitud</h2>
+
+  <label>
+    Referencia
+    <div class="inline">
+      <input formControlName="applicationReference" placeholder="REF-001" />
+      <button type="button" class="secondary" (click)="regenerateReference()">Nueva</button>
+    </div>
+    @if (isInvalid('applicationReference')) {
+      <small class="error">La referencia es obligatoria (max. 50 caracteres)</small>
+    }
+    <small class="hint">Reenvia la misma referencia para probar el manejo de duplicados.</small>
+  </label>
+
+  <label>
+    Cliente
+    <input formControlName="customerId" list="customer-options" placeholder="CLI-1001" />
+    <datalist id="customer-options">
+      @for (customer of customers(); track customer.id) {
+        <option [value]="customer.id">{{ customer.status }}</option>
+      }
+    </datalist>
+    @if (isInvalid('customerId')) {
+      <small class="error">El cliente es obligatorio</small>
+    }
+  </label>
+
+  <label>
+    Valor solicitado (COP)
+    <input type="number" formControlName="amount" step="1" />
+    @if (isInvalid('amount')) {
+      <small class="error">El valor es obligatorio</small>
+    }
+  </label>
+
+  <label>
+    Plazo (meses)
+    <input type="number" formControlName="termMonths" step="1" />
+    @if (isInvalid('termMonths')) {
+      <small class="error">El plazo es obligatorio</small>
+    }
+    <small class="hint">Plazo valido: entre 6 y 60 meses.</small>
+  </label>
+
+  <button type="submit" [disabled]="submitting()">
+    {{ submitting() ? 'Procesando...' : 'Enviar solicitud' }}
+  </button>
+
+  @if (customers().length) {
+    <h3>Cupo de clientes</h3>
+    <table>
+      <thead>
+        <tr><th>Cliente</th><th>Estado</th><th class="num">Disponible</th></tr>
+      </thead>
+      <tbody>
+        @for (customer of customers(); track customer.id) {
+          <tr>
+            <td>{{ customer.id }}</td>
+            <td>{{ customer.status }}</td>
+            <td class="num">
+              {{ customer.availableAmount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+              <small class="hint">de {{ customer.creditLimit | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</small>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</form>

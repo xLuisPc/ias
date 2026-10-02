@@ -12,8 +12,7 @@ desktop.ini
 *.iml
 *.iws
 *.ipr
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .classpath
 .project
 .settings/
@@ -47,6 +46,8 @@ frontend/.angular/
 frontend/coverage/
 frontend/.sass-cache/
 frontend/bazel-out/
+frontend/tmp/
+__screenshots__/
 
 # --- Variables de entorno / secretos ---
 .env

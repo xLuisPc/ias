@@ -1,0 +1,24 @@
+@let app = result().application;
+<section class="card result" [class.approved]="approved()" [class.rejected]="!approved()">
+  <p class="notice" [class.warning]="result().kind !== 'created' && result().kind !== 'found'">
+    {{ notice() }}
+  </p>
+
+  <div class="result-header">
+    <span class="badge" [class.badge-ok]="approved()" [class.badge-ko]="!approved()">
+      {{ approved() ? 'APROBADA' : 'RECHAZADA' }}
+    </span>
+    <strong>{{ app.message }}</strong>
+  </div>
+
+  <dl>
+    <dt>Referencia</dt><dd>{{ app.applicationReference }}</dd>
+    <dt>Cliente</dt><dd>{{ app.customerId }}</dd>
+    <dt>Valor</dt><dd>{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd>
+    <dt>Plazo</dt><dd>{{ app.termMonths }} meses</dd>
+    @if (app.rejectionReason) {
+      <dt>Razon</dt><dd><code>{{ app.rejectionReason }}</code></dd>
+    }
+    <dt>Procesada</dt><dd>{{ app.processedAt | date: 'medium' }}</dd>
+  </dl>
+</section>

@@ -1,0 +1,32 @@
+<header class="topbar">
+  <h1>BancoIAS · Core de aprobacion de creditos</h1>
+</header>
+
+<main class="layout">
+  <app-application-form
+    [customers]="customers()"
+    [submitting]="submitting()"
+    (submitted)="submit($event)"
+  />
+
+  <div class="column">
+    <form class="card search" (ngSubmit)="search()">
+      <input name="reference" [(ngModel)]="searchReference" placeholder="Consultar por referencia (ej. REF-001)" />
+      <button type="submit" class="secondary">Consultar</button>
+    </form>
+
+    @if (error(); as message) {
+      <div class="card alert" role="alert">{{ message }}</div>
+    }
+
+    @if (result(); as current) {
+      <app-application-result [result]="current" />
+    }
+
+    <app-recent-applications
+      [applications]="recent()"
+      (refresh)="reload()"
+      (selected)="show($event)"
+    />
+  </div>
+</main>

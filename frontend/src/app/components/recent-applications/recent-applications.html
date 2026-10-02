@@ -1,0 +1,44 @@
+<section class="card">
+  <div class="section-header">
+    <h2>Solicitudes recientes</h2>
+    <button type="button" class="secondary" (click)="refresh.emit()">Actualizar</button>
+  </div>
+
+  @if (applications().length === 0) {
+    <p class="hint">Aun no hay solicitudes procesadas.</p>
+  } @else {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Referencia</th>
+            <th>Cliente</th>
+            <th class="num">Valor</th>
+            <th class="num">Plazo</th>
+            <th>Resultado</th>
+            <th>Procesada</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (app of applications(); track app.applicationReference) {
+            <tr class="clickable" (click)="selected.emit(app)" [title]="app.message">
+              <td>{{ app.applicationReference }}</td>
+              <td>{{ app.customerId }}</td>
+              <td class="num">{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="num">{{ app.termMonths }}</td>
+              <td>
+                <span class="badge" [class.badge-ok]="app.status === 'APPROVED'" [class.badge-ko]="app.status === 'REJECTED'">
+                  {{ app.status === 'APPROVED' ? 'APROBADA' : 'RECHAZADA' }}
+                </span>
+                @if (app.rejectionReason) {
+                  <small class="hint">{{ app.rejectionReason }}</small>
+                }
+              </td>
+              <td>{{ app.processedAt | date: 'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
