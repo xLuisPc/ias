@@ -15,6 +15,17 @@ spring:
     username: guest
     password: guest
     connection-timeout: 2s
+    # El broker confirma cada publicacion: solo se da por publicado lo que RabbitMQ acepto.
+    publisher-confirm-type: simple
+    listener:
+      simple:
+        # Nunca reencolar indefinidamente: lo que falla tras los reintentos va a la dead-letter queue.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-retries: 2 # 3 intentos en total
+          initial-interval: 1s
+          multiplier: 2
 
 server:
   port: 8080
@@ -26,3 +37,5 @@ app:
     exchange: credit.events
     approved-routing-key: credit.application.approved
     approved-queue: credit.application.approved.audit
+    dead-letter-exchange: credit.events.dlx
+    approved-dead-letter-queue: credit.application.approved.audit.dlq

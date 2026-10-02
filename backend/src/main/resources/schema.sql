@@ -22,3 +22,14 @@ CREATE TABLE IF NOT EXISTS credit_application (
 );
 
 CREATE INDEX IF NOT EXISTS ix_credit_application_processed_at ON credit_application (processed_at);
+
+-- Registro del consumidor de ejemplo (punto opcional RabbitMQ). En un sistema real viviria en la base del consumidor.
+-- La PK sobre message_id hace al consumidor idempotente: un mensaje repetido no genera un segundo registro.
+CREATE TABLE IF NOT EXISTS approved_application_audit (
+    message_id            VARCHAR(100)             PRIMARY KEY,
+    application_reference VARCHAR(50)              NOT NULL,
+    customer_id           VARCHAR(50)              NOT NULL,
+    amount                DECIMAL(19, 2)           NOT NULL,
+    approved_at           TIMESTAMP WITH TIME ZONE NOT NULL,
+    received_at           TIMESTAMP WITH TIME ZONE NOT NULL
+);
