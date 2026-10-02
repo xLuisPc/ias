@@ -1,9 +1,10 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreditApplicationRequest, Customer } from '../../core/credit.models';
 
-/** Genera una referencia legible y practicamente unica para facilitar las pruebas manuales. */
+/** Genera una referencia legible y prácticamente única para facilitar las pruebas manuales. */
 export function newReference(): string {
   return `REF-${Date.now().toString(36).toUpperCase()}`;
 }
@@ -16,6 +17,7 @@ export function newReference(): string {
   selector: 'app-application-form',
   imports: [ReactiveFormsModule, CurrencyPipe],
   templateUrl: './application-form.html',
+  styleUrl: './application-form.css',
 })
 export class ApplicationForm {
   readonly customers = input<Customer[]>([]);
@@ -33,6 +35,11 @@ export class ApplicationForm {
     }),
     amount: new FormControl<number | null>(6000000, Validators.required),
     termMonths: new FormControl<number | null>(24, Validators.required),
+  });
+
+  /** Valor tecleado, para mostrarlo formateado en pesos y evitar errores con los ceros. */
+  readonly amount = toSignal(this.form.controls.amount.valueChanges, {
+    initialValue: this.form.controls.amount.value,
   });
 
   regenerateReference(): void {

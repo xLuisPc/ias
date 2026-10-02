@@ -1,0 +1,28 @@
+<ol
+  class="route"
+  [class.is-idle]="stop() < 0"
+  [style.--progress]="progress()"
+  aria-label="Recorrido de evaluación de reglas"
+>
+  @for (station of stations(); track station.reason) {
+    <li class="station" [attr.data-state]="station.state">
+      <span class="node" aria-hidden="true">
+        @if (station.state === 'stopped') {
+          <svg viewBox="0 0 16 16"><path d="M5 5l6 6M11 5l-6 6" /></svg>
+        }
+      </span>
+      <span class="name">{{ station.name }}</span>
+      <span class="rule">{{ station.rule }}</span>
+      <span class="visually-hidden">: {{ station.stateText }}</span>
+    </li>
+  }
+  <li class="station terminal" [attr.data-state]="approved() ? 'arrived' : 'idle'">
+    <span class="node" aria-hidden="true">
+      @if (approved()) {
+        <svg viewBox="0 0 16 16"><path d="M4 8.5l2.6 2.5L12 5.5" /></svg>
+      }
+    </span>
+    <span class="name">Aprobación</span>
+    <span class="rule">{{ approved() ? 'Cupo reservado' : 'Fin de la línea' }}</span>
+  </li>
+</ol>

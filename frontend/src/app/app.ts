@@ -3,6 +3,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApplicationForm } from './components/application-form/application-form';
 import { ApplicationResult } from './components/application-result/application-result';
+import { CustomerCredit } from './components/customer-credit/customer-credit';
+import { EvaluationRoute } from './components/evaluation-route/evaluation-route';
 import { RecentApplications } from './components/recent-applications/recent-applications';
 import { CreditApiService } from './core/credit-api.service';
 import {
@@ -19,8 +21,9 @@ import {
  */
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, ApplicationForm, ApplicationResult, RecentApplications],
+  imports: [FormsModule, ApplicationForm, ApplicationResult, CustomerCredit, EvaluationRoute, RecentApplications],
   templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App implements OnInit {
   private readonly api = inject(CreditApiService);
@@ -91,7 +94,7 @@ export class App implements OnInit {
 
   private showError(err: HttpErrorResponse): void {
     if (err.status === 0) {
-      this.error.set('No fue posible conectar con el backend. Verifica que este ejecutandose en el puerto 8080.');
+      this.error.set('No hay conexión con el backend. Verifica que esté corriendo en el puerto 8080.');
       return;
     }
     const problem = err.error as ProblemDetail | null;

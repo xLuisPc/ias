@@ -51,7 +51,7 @@ describe('App', () => {
     await fixture.whenStable();
 
     expect(fixture.componentInstance.result()).toEqual({ kind: 'conflict', application: ORIGINAL });
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('datos diferentes');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('con otros datos');
   });
 
   it('shows a friendly message when the backend is not reachable', async () => {
@@ -62,6 +62,6 @@ describe('App', () => {
     http.match((r) => r.url === '/api/credit-applications').forEach((req) => req.flush([]));
     await fixture.whenStable();
 
-    expect(fixture.componentInstance.error()).toContain('No fue posible conectar con el backend');
+    expect(fixture.componentInstance.error()).toContain('No hay conexión con el backend');
   });
 });

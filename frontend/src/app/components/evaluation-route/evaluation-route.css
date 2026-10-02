@@ -1,0 +1,94 @@
+.route {
+  --node: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  position: relative;
+}
+
+/* Vía: tramo sin recorrer (discontinuo) y tramo recorrido (petróleo, se llena hasta la parada). */
+.route::before,
+.route::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--node) / 2 - 2px);
+  left: calc(100% / 12);
+  right: calc(100% / 12);
+  height: 4px;
+}
+.route::before {
+  background: repeating-linear-gradient(90deg, var(--rule-strong) 0 6px, transparent 6px 11px);
+}
+.route::after {
+  background: var(--panel);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  animation: route-fill 240ms var(--ease-out);
+}
+
+@keyframes route-fill {
+  from { transform: scaleX(0); }
+}
+
+.station {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.node {
+  width: var(--node);
+  height: var(--node);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 3px solid var(--rule-strong);
+  margin-bottom: 6px;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+.node svg { width: 12px; height: 12px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.name { font-weight: 700; font-size: 0.93rem; }
+.rule { color: var(--ink-2); font-size: 0.8rem; line-height: 1.3; }
+
+/* Superada: estación servida. */
+.station[data-state='passed'] .node { border-color: var(--panel); }
+.station[data-state='passed'] .node::after {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--panel);
+}
+
+/* Detenida: único uso del amarillo de ruta. */
+.station[data-state='stopped'] .node {
+  border-color: var(--ko);
+  box-shadow: 0 0 0 5px var(--route);
+}
+.station[data-state='stopped'] .node svg { stroke: var(--ko); }
+.station[data-state='stopped'] .name { color: var(--ko); }
+
+/* No evaluada: después de la parada. */
+.station[data-state='skipped'] .name,
+.station[data-state='skipped'] .rule { color: var(--ink-3); }
+
+/* Terminal */
+.terminal[data-state='arrived'] .node { background: var(--ok); border-color: var(--ok); }
+.terminal[data-state='arrived'] .node svg { stroke: #fff; }
+.terminal[data-state='arrived'] .name { color: var(--ok); }
+.terminal[data-state='idle'] .name { color: var(--ink-2); }
+
+@media (max-width: 560px) {
+  /* La terminal ("Aprobación") es la etiqueta más larga: su columna es más ancha y la vía
+     sigue pasando por el centro de cada estación. */
+  .route { --node: 18px; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.5fr); }
+  .route::before, .route::after { left: calc(100% * 0.5 / 6.5); right: calc(100% * 0.75 / 6.5); }
+  .rule { display: none; }
+  .name { font-size: 0.72rem; }
+}

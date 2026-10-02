@@ -1,0 +1,38 @@
+.empty { margin: 0; padding: 28px 20px; color: var(--ink-2); }
+
+th:first-child, td:first-child { padding-left: 20px; }
+th:last-child, td:last-child { padding-right: 20px; }
+
+tbody td { transition: background-color 150ms ease-out; }
+/* El sombreado de 1px cubre la costura que deja el antialias entre celdas de ancho fraccionario. */
+tbody tr:hover td { background: #f6f8f7; box-shadow: 1px 0 0 #f6f8f7; }
+tbody tr.is-selected td { background: var(--info-soft); box-shadow: 1px 0 0 var(--info-soft); }
+td.mono, td.num, td:first-child { white-space: nowrap; }
+
+.outcome { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+.ref {
+  font: inherit;
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--action);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease-out;
+}
+.ref:hover { text-decoration-color: currentColor; }
+
+.where { color: var(--ink-2); }
+.when { color: var(--ink-2); white-space: nowrap; }
+
+/* En pantallas angostas el resultado importa más que el cliente y el plazo (siguen en el detalle). */
+@media (max-width: 560px) {
+  .opt { display: none; }
+  .outcome { flex-direction: column; align-items: flex-start; gap: 0; }
+  .where { padding-left: 20px; }
+}

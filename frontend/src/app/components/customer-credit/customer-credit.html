@@ -1,0 +1,23 @@
+<section class="area">
+  <div class="area-head"><h2>Cupo por cliente</h2></div>
+  <ul class="customers">
+    @for (customer of customers(); track customer.id) {
+      <li [class.is-blocked]="customer.status === 'BLOCKED'">
+        <div class="line">
+          <span class="mono id">{{ customer.id }}</span>
+          <span class="state">{{ customer.status === 'ELIGIBLE' ? 'Habilitado' : 'Bloqueado' }}</span>
+        </div>
+        <div class="meter" role="meter" aria-valuemin="0" [attr.aria-valuemax]="customer.creditLimit"
+             [attr.aria-valuenow]="customer.approvedAmount" [attr.aria-label]="'Cupo aprobado de ' + customer.id">
+          <span [style.transform]="'scaleX(' + usage(customer) + ')'"></span>
+        </div>
+        <div class="line figures">
+          <span>Disponible <strong>{{ customer.availableAmount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong></span>
+          <span class="limit">de {{ customer.creditLimit | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        </div>
+      </li>
+    } @empty {
+      <li class="empty">Sin datos de clientes.</li>
+    }
+  </ul>
+</section>

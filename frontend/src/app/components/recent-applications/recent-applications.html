@@ -1,40 +1,47 @@
-<section class="card">
-  <div class="section-header">
-    <h2>Solicitudes recientes</h2>
-    <button type="button" class="secondary" (click)="refresh.emit()">Actualizar</button>
+<section class="area">
+  <div class="area-head">
+    <h2>Procesadas recientemente</h2>
+    <button type="button" class="btn btn-quiet" (click)="refresh.emit()">Actualizar</button>
   </div>
 
   @if (applications().length === 0) {
-    <p class="hint">Aun no hay solicitudes procesadas.</p>
+    <p class="empty">Todavía no hay solicitudes. Las que envíes aparecerán aquí, de la más reciente a la más antigua.</p>
   } @else {
-    <div class="table-wrapper">
+    <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th>Referencia</th>
-            <th>Cliente</th>
-            <th class="num">Valor</th>
-            <th class="num">Plazo</th>
-            <th>Resultado</th>
-            <th>Procesada</th>
+            <th scope="col">Referencia</th>
+            <th scope="col" class="opt">Cliente</th>
+            <th scope="col" class="num">Valor</th>
+            <th scope="col" class="num opt">Plazo</th>
+            <th scope="col">Resultado</th>
+            <th scope="col" class="opt">Procesada</th>
           </tr>
         </thead>
         <tbody>
           @for (app of applications(); track app.applicationReference) {
-            <tr class="clickable" (click)="selected.emit(app)" [title]="app.message">
-              <td>{{ app.applicationReference }}</td>
-              <td>{{ app.customerId }}</td>
-              <td class="num">{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
-              <td class="num">{{ app.termMonths }}</td>
+            <tr [class.is-selected]="app.applicationReference === selectedReference()">
               <td>
-                <span class="badge" [class.badge-ok]="app.status === 'APPROVED'" [class.badge-ko]="app.status === 'REJECTED'">
-                  {{ app.status === 'APPROVED' ? 'APROBADA' : 'RECHAZADA' }}
-                </span>
-                @if (app.rejectionReason) {
-                  <small class="hint">{{ app.rejectionReason }}</small>
-                }
+                <button type="button" class="ref mono" (click)="selected.emit(app)"
+                        [attr.aria-label]="'Ver detalle de ' + app.applicationReference">
+                  {{ app.applicationReference }}
+                </button>
               </td>
-              <td>{{ app.processedAt | date: 'short' }}</td>
+              <td class="mono opt">{{ app.customerId }}</td>
+              <td class="num">{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="num opt">{{ app.termMonths }}</td>
+              <td>
+                <span class="outcome">
+                  @if (app.status === 'APPROVED') {
+                    <span class="mark mark-ok">Aprobada</span>
+                  } @else {
+                    <span class="mark mark-ko">Rechazada</span>
+                    <span class="where">en {{ stationFor(app.rejectionReason) }}</span>
+                  }
+                </span>
+              </td>
+              <td class="when opt">{{ app.processedAt | date: 'd MMM, HH:mm' }}</td>
             </tr>
           }
         </tbody>

@@ -1,30 +1,45 @@
 <header class="topbar">
-  <h1>BancoIAS · Core de aprobacion de creditos</h1>
+  <div class="brand">
+    <span class="wordmark">BancoIAS</span>
+    <span class="product">Core de aprobación de créditos</span>
+  </div>
+  <form class="lookup" role="search" (ngSubmit)="search()">
+    <label for="lookup" class="visually-hidden">Consultar por referencia</label>
+    <input id="lookup" name="reference" class="mono" [(ngModel)]="searchReference"
+           placeholder="Consultar referencia, p. ej. REF-001" autocomplete="off" />
+    <button type="submit" class="btn">Consultar</button>
+  </form>
 </header>
 
-<main class="layout">
-  <app-application-form
-    [customers]="customers()"
-    [submitting]="submitting()"
-    (submitted)="submit($event)"
-  />
+<main class="workspace">
+  <div class="side">
+    <app-application-form [customers]="customers()" [submitting]="submitting()" (submitted)="submit($event)" />
+    <app-customer-credit [customers]="customers()" />
+  </div>
 
-  <div class="column">
-    <form class="card search" (ngSubmit)="search()">
-      <input name="reference" [(ngModel)]="searchReference" placeholder="Consultar por referencia (ej. REF-001)" />
-      <button type="submit" class="secondary">Consultar</button>
-    </form>
-
+  <div class="main">
     @if (error(); as message) {
-      <div class="card alert" role="alert">{{ message }}</div>
+      <p class="alert" role="alert">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.2 11H1.8z" /><path d="M8 6.6v3M8 11.4v.1" /></svg>
+        {{ message }}
+      </p>
     }
 
     @if (result(); as current) {
       <app-application-result [result]="current" />
+    } @else {
+      <section class="area idle">
+        <div class="idle-copy">
+          <h2>Resultado</h2>
+          <p>Envía una solicitud o consulta una referencia. La línea muestra las reglas en el orden en que se evalúan y dónde termina cada solicitud.</p>
+        </div>
+        <app-evaluation-route />
+      </section>
     }
 
     <app-recent-applications
       [applications]="recent()"
+      [selectedReference]="result()?.application?.applicationReference ?? null"
       (refresh)="reload()"
       (selected)="show($event)"
     />

@@ -54,5 +54,5 @@ __screenshots__/
 .env.*
 !.env.example
 
-# --- Notas personales de estudio (no forman parte de la entrega) ---
-GUIA_ESTUDIO.md
+# --- Salidas de herramientas de navegador ---
+.playwright-mcp/

@@ -1,0 +1,69 @@
+.topbar {
+  background: var(--panel);
+  color: var(--panel-text);
+  min-height: 56px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.wordmark { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
+.product { color: var(--panel-muted); padding-left: 14px; border-left: 1px solid var(--panel-line); }
+
+.lookup { display: flex; gap: 8px; flex: 0 1 420px; }
+.lookup input {
+  height: 36px;
+  background: var(--panel-deep);
+  border-color: var(--panel-line);
+  color: var(--panel-text);
+}
+.lookup input::placeholder { color: var(--panel-muted); font-family: var(--font); }
+.lookup input:hover { border-color: var(--panel-muted); }
+.lookup input:focus-visible { outline: 2px solid #ffffff; outline-offset: 0; border-color: transparent; }
+.lookup .btn { height: 36px; background: var(--panel-text); color: var(--panel); }
+.lookup .btn:hover { background: #dde9e8; }
+.lookup .btn:focus-visible { outline-color: #ffffff; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px 24px 32px;
+  align-items: start;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.side, .main { display: grid; gap: 20px; min-width: 0; }
+
+.alert {
+  margin: 0;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--ko-soft);
+  color: #8a2a19;
+  border: 1px solid #efc6bb;
+  border-radius: var(--radius);
+}
+.alert svg { width: 16px; height: 16px; flex: none; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+
+.idle { padding: 20px 24px 24px; display: grid; gap: 22px; }
+.idle-copy { display: grid; gap: 4px; }
+.idle-copy p { margin: 0; color: var(--ink-2); max-width: 68ch; }
+
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 16px; }
+  /* En una columna: formulario, resultado, recientes y por ultimo el cupo. */
+  .side, .main { display: contents; }
+  app-application-form { order: 1; }
+  .main > .alert { order: 2; }
+  app-application-result, .idle { order: 3; }
+  app-recent-applications { order: 4; }
+  app-customer-credit { order: 5; }
+  .topbar { padding: 10px 16px; }
+  .lookup { flex-basis: 100%; }
+}

@@ -25,6 +25,9 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/overpass/index.css",
+              "node_modules/@fontsource/overpass-mono/latin-400.css",
+              "node_modules/@fontsource/overpass-mono/latin-600.css",
               "src/styles.css"
             ]
           },

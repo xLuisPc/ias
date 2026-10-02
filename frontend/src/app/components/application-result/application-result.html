@@ -1,24 +1,40 @@
 @let app = result().application;
-<section class="card result" [class.approved]="approved()" [class.rejected]="!approved()">
-  <p class="notice" [class.warning]="result().kind !== 'created' && result().kind !== 'found'">
-    {{ notice() }}
-  </p>
+<section class="area result" aria-live="polite">
+  @if (notice(); as n) {
+    <p class="notice" [attr.data-tone]="n.tone">
+      @if (n.tone === 'warn') {
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.2 11H1.8z" /><path d="M8 6.6v3M8 11.4v.1" /></svg>
+      } @else {
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" /><path d="M8 7.2v3.6M8 5.2v.1" /></svg>
+      }
+      {{ n.text }}
+    </p>
+  }
 
-  <div class="result-header">
-    <span class="badge" [class.badge-ok]="approved()" [class.badge-ko]="!approved()">
-      {{ approved() ? 'APROBADA' : 'RECHAZADA' }}
-    </span>
-    <strong>{{ app.message }}</strong>
-  </div>
+  <header class="verdict">
+    <h2 class="status" [class.is-ok]="approved()" [class.is-ko]="!approved()">
+      {{ approved() ? 'Aprobada' : 'Rechazada' }}
+      @if (stoppedAt(); as station) {
+        <span class="stop">en {{ station }}</span>
+      }
+    </h2>
+    <p class="message">
+      {{ app.message }}
+      @if (app.rejectionReason) {
+        <span class="mono code">{{ app.rejectionReason }}</span>
+      }
+    </p>
+  </header>
 
-  <dl>
-    <dt>Referencia</dt><dd>{{ app.applicationReference }}</dd>
-    <dt>Cliente</dt><dd>{{ app.customerId }}</dd>
-    <dt>Valor</dt><dd>{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd>
-    <dt>Plazo</dt><dd>{{ app.termMonths }} meses</dd>
-    @if (app.rejectionReason) {
-      <dt>Razon</dt><dd><code>{{ app.rejectionReason }}</code></dd>
-    }
-    <dt>Procesada</dt><dd>{{ app.processedAt | date: 'medium' }}</dd>
+  @for (shown of [app]; track shown.applicationReference) {
+    <app-evaluation-route [application]="shown" />
+  }
+
+  <dl class="facts">
+    <div><dt>Referencia</dt><dd class="mono">{{ app.applicationReference }}</dd></div>
+    <div><dt>Cliente</dt><dd class="mono">{{ app.customerId }}</dd></div>
+    <div><dt>Valor</dt><dd>{{ app.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd></div>
+    <div><dt>Plazo</dt><dd>{{ app.termMonths }} meses</dd></div>
+    <div><dt>Procesada</dt><dd>{{ app.processedAt | date: 'd MMM y, HH:mm:ss' }}</dd></div>
   </dl>
 </section>
