@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: credit-core
+  r2dbc:
+    # H2 en modo archivo: los datos sobreviven a reinicios sin instalar nada adicional.
+    url: r2dbc:h2:file:///./data/credit-core;LOCK_TIMEOUT=10000
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 2s
+
+server:
+  port: 8080
+
+app:
+  rabbitmq:
+    # Punto opcional. Activar con APP_RABBITMQ_ENABLED=true (requiere `docker compose up -d rabbitmq`).
+    enabled: false
+    exchange: credit.events
+    approved-routing-key: credit.application.approved
+    approved-queue: credit.application.approved.audit
