@@ -225,7 +225,17 @@ Las reglas se evalúan en este orden: monto → plazo → cliente existe → cli
 - Proxy de desarrollo `/api → :8080` en lugar de CORS. Locale `es-CO` para formatear pesos.
 - Sin librería de componentes: no se evalúa diseño gráfico y se mantiene liviano.
 
+**Diseño visual.** Una herramienta interna para analistas, sobria, con un solo elemento propio: la **línea de evaluación**.
+- Las cinco reglas se dibujan como estaciones (Monto → Plazo → Cliente → Estado → Cupo → Aprobación), en el mismo orden en que las evalúa `CreditPolicy`.
+- El resultado se lee como la estación donde terminó la solicitud. Una rechazada muestra exactamente qué regla falló, sin leer códigos.
+- El estado de cada estación se codifica por **forma** y no solo por color: superada, detenida con aspa, no evaluada. Sigue siendo legible para personas que no distinguen rojo de verde.
+- Paleta restringida: un panel petróleo como estructura, áreas planas sin sombras, azul solo para acciones, rojo solo para rechazos y errores. El amarillo se reserva para marcar dónde se detuvo la decisión.
+- Tipografía Overpass (inspirada en la señalética vial) servida desde el propio proyecto con `@fontsource`, sin depender de CDN. La variante mono se usa solo para referencias y códigos.
+- Detalles de uso real: el valor tecleado se muestra formateado en pesos para evitar errores con los ceros, y la tabla oculta columnas secundarias en móvil.
+
 **Trade-offs.** No hay router (es una sola vista) ni manejo de estado global (NgRx), porque no se justifican. Para un despliegue real se serviría el build detrás del mismo dominio o se configuraría CORS.
+
+**Validación.** Capturas en escritorio (1440 px) y móvil (390 px) de los estados idle, rechazada, repetida y conflicto. También una revisión independiente del resultado que encontró 7 problemas, todos corregidos: animación, desborde en móvil, forma del rechazo, tono del aviso de conflicto, costuras de la tabla, etiquetas en móvil y contraste del botón.
 
 ---
 
@@ -237,7 +247,7 @@ Las reglas se evalúan en este orden: monto → plazo → cliente existe → cli
 | Caso de uso | `CreditApplicationServiceTest` (7) | Orquestación: aprobación + evento, rechazo sin reservar ni publicar, reserva fallida, replay, conflicto, carrera en el UNIQUE |
 | Integración HTTP + BD | `CreditApplicationApiIntegrationTest` (8) | RF01-RF06 de punta a punta, códigos HTTP y efecto real sobre el cupo |
 | Concurrencia | `ConcurrencyIntegrationTest` (2) | RF04 y RF05 simultáneos, deterministas |
-| Frontend | Vitest (9) | Servicio HTTP (replay por header), render del resultado, manejo del 409 y del backend caído |
+| Frontend | Vitest (13) | Servicio HTTP (replay por header), render del resultado, línea de evaluación (parada según la razón), manejo del 409 y del backend caído |
 
 Validaciones adicionales:
 - Ejecuté las pruebas de integración 50 veces seguidas (500 ejecuciones) sin fallos.

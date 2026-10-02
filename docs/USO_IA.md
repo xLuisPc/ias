@@ -12,6 +12,7 @@
 | **Diseño** | Proponer alternativas para concurrencia, idempotencia, persistencia y API, con sus trade-offs | Cada decisión quedó registrada con alternativas, riesgos y forma de validación ([DECISIONES.md](DECISIONES.md)), para poder defenderla |
 | **Implementación** | Generar el código del backend, del frontend y la configuración | Revisión del código y verificación de que cada requisito tiene una prueba que lo respalde |
 | **Pruebas** | Escribir pruebas unitarias, de integración y de concurrencia | Las pruebas se ejecutaron, se repitieron y se sometieron a mutación (sección 3) |
+| **Diseño visual** | Proponer varias direcciones visuales para la interfaz y construir la elegida | Elección entre las alternativas propuestas; un segundo agente independiente revisó las capturas y encontró 7 problemas, todos corregidos y verificados con mediciones en el navegador |
 | **Documentación** | Redactar el README y los registros | Contraste contra el código real y el resultado de las pruebas |
 
 ---
@@ -30,11 +31,11 @@
 
 | Validación | Qué se verificó | Resultado |
 |---|---|---|
-| Suite automatizada | Reglas, caso de uso, API, concurrencia y frontend | ✅ 31 pruebas de backend + 9 de frontend |
+| Suite automatizada | Reglas, caso de uso, API, concurrencia y frontend | ✅ 31 pruebas de backend + 13 de frontend |
 | Estabilidad | Pruebas de integración ejecutadas 50 veces seguidas | ✅ 500/500 ejecuciones sin fallos |
 | **Mutación** | Romper a propósito la reserva atómica de cupo, para confirmar que la prueba de concurrencia lo detecta | ✅ La prueba falla con el código roto (10 aprobadas en vez de 3) y pasa con el real |
 | Ejecución real | Backend + Angular con curl a través del proxy: cada razón de rechazo, replay (200) y conflicto (409) | ✅ |
-| Interfaz | Revisión visual de la UI contra el backend real | ✅ |
+| Interfaz | Capturas en escritorio y móvil de cada estado (idle, rechazada, repetida, conflicto) contra el backend real, más una revisión independiente | ✅ Sin desbordes a 390 px; 7 hallazgos de la revisión corregidos |
 | RabbitMQ | Publicación y consumo con `docker compose`, incluido el broker caído | ✅ La aprobación no depende del broker |
 
 ---

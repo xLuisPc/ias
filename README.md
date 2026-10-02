@@ -23,9 +23,9 @@ Documentación complementaria:
 | RF04 Solicitudes simultáneas respetan el cupo | ✅ | `UPDATE` condicional atómico. `ConcurrencyIntegrationTest` |
 | RF05 Referencias repetidas | ✅ | Igual contenido → 200 con resultado original; contenido distinto → 409. Restricción `UNIQUE` para la carrera simultánea |
 | RF06 Consultar por referencia y recientes | ✅ | `GET /api/credit-applications/{ref}` y `GET /api/credit-applications?limit=20` |
-| RF07 Interfaz Angular | ✅ | Formulario, resultado, consulta por referencia, recientes y cupo de clientes |
+| RF07 Interfaz Angular | ✅ | Formulario, resultado con la *línea de evaluación* (muestra en qué regla terminó la solicitud), consulta por referencia, recientes y cupo por cliente |
 | Persistencia | ✅ | H2 en archivo (`backend/data/`): los datos sobreviven a reinicios |
-| Pruebas automatizadas | ✅ | Backend: 31 (unitarias, caso de uso, integración HTTP, concurrencia). Frontend: 9 (Vitest) |
+| Pruebas automatizadas | ✅ | Backend: 31 (unitarias, caso de uso, integración HTTP, concurrencia). Frontend: 13 (Vitest) |
 | Opcional RabbitMQ | ✅ | Deshabilitado por defecto; ver sección 5 |
 
 ## 2. Requisitos
@@ -59,7 +59,7 @@ Abrir http://localhost:4200. El servidor de desarrollo redirige `/api` hacia `ht
 
 ```bash
 cd backend && ./mvnw test           # 31 pruebas
-cd frontend && npm test -- --watch=false   # 9 pruebas
+cd frontend && npm test -- --watch=false   # 13 pruebas
 ```
 
 ## 4. API
@@ -130,7 +130,7 @@ backend/src/main/java/com/bancoias/credit
 
 frontend/src/app
 ├── core/              Modelos y servicio HTTP
-├── components/        Componentes presentacionales (formulario, resultado, recientes)
+├── components/        Componentes presentacionales (formulario, resultado, línea de evaluación, recientes, cupo)
 └── app.ts             Componente contenedor (estado con signals)
 ```
 
