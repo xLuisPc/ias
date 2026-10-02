@@ -1,0 +1,57 @@
+# ============================================================
+#  .gitignore unico del monorepo (backend Spring + frontend Angular)
+# ============================================================
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDEs / editores ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/extensions.json
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.sts4-cache/
+.springBeans
+*.swp
+*~
+
+# --- Logs ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Backend: Java / Maven ---
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+# Base de datos H2 en archivo generada al ejecutar la app
+backend/data/
+*.mv.db
+*.trace.db
+
+# --- Frontend: Angular / Node ---
+frontend/node_modules/
+frontend/dist/
+frontend/out-tsc/
+frontend/.angular/
+frontend/coverage/
+frontend/.sass-cache/
+frontend/bazel-out/
+
+# --- Variables de entorno / secretos ---
+.env
+.env.*
+!.env.example
+
+# --- Notas personales de estudio (no forman parte de la entrega) ---
+GUIA_ESTUDIO.md
