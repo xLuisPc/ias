@@ -97,7 +97,7 @@ Ejemplo de respuesta:
   "termMonths": 24,
   "status": "REJECTED",
   "rejectionReason": "CREDIT_LIMIT_EXCEEDED",
-  "message": "La solicitud supera el cupo maximo acumulado disponible del cliente",
+  "message": "La solicitud supera el cupo máximo acumulado disponible del cliente",
   "processedAt": "2026-10-02T02:57:23.497049Z"
 }
 ```
