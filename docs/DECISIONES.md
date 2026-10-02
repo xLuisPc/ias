@@ -13,7 +13,7 @@ Cada decisión sigue el formato: **contexto → alternativas → decisión → t
 7. [Transacción reactiva explícita](#7-transacción-reactiva-explícita)
 8. [Diseño de la API y errores](#8-diseño-de-la-api-y-errores)
 9. [Fecha de procesamiento y montos](#9-fecha-de-procesamiento-y-montos)
-10. [RabbitMQ opcional: publicación best-effort tras el commit](#10-rabbitmq-opcional-publicación-best-effort-tras-el-commit)
+10. [RabbitMQ opcional: evento de aprobación y consumidor idempotente](#10-rabbitmq-opcional-evento-de-aprobación-y-consumidor-idempotente)
 11. [Frontend Angular](#11-frontend-angular)
 12. [Estrategia de pruebas](#12-estrategia-de-pruebas)
 
@@ -191,26 +191,56 @@ Las reglas se evalúan en este orden: monto → plazo → cliente existe → cli
 
 ---
 
-## 10. RabbitMQ opcional: publicación best-effort tras el commit
+## 10. RabbitMQ opcional: evento de aprobación y consumidor idempotente
 
-**Contexto.** Otros sistemas deben poder reaccionar a una aprobación. Es un punto opcional, y la aplicación debe seguir funcionando sin RabbitMQ.
+**Contexto.** Cuando una solicitud se aprueba, otros sistemas deben poder reaccionar *posteriormente* a ese hecho. Es un punto opcional: la aplicación debe funcionar sin RabbitMQ y el alcance obligatorio no puede depender de él. El enunciado deja abiertos la topología, el contrato, los reintentos, los duplicados y el manejo de errores. Abajo hay una decisión para cada uno.
+
+**Alternativas.**
+- *Procesar las solicitudes a través de la cola* (el POST encola y un consumidor decide). Se descartó porque:
+  - la respuesta dejaría de ser inmediata (202 y consulta posterior del estado);
+  - el 200/409 de RF05 llegaría tarde;
+  - el alcance obligatorio pasaría a depender de Docker.
+
+  Además, la evaluación tarda milisegundos, así que una cola no resuelve ningún problema real aquí.
+- *Publicar dentro de la transacción.* Si después hay rollback, otros sistemas reaccionarían a una aprobación que no existe.
+- *Publicar después del commit* (elegida). La decisión es síncrona y la integración con otros sistemas es asíncrona.
 
 **Decisión.**
-- Puerto `CreditEventPublisher` con dos implementaciones, elegidas por `app.rabbitmq.enabled` (falso por defecto):
-  - `NoOpCreditEventPublisher`, la de por defecto;
-  - `RabbitCreditEventPublisher`.
-- Exchange **topic** durable `credit.events` y routing key `credit.application.approved`. Un exchange topic permite que otros sistemas creen sus propias colas sin modificar este servicio.
-- Mensaje JSON `CreditApplicationApprovedEvent` con `messageId = applicationReference`, para que los consumidores puedan descartar duplicados.
-- Se publica **después del commit** y solo para solicitudes nuevas aprobadas; nunca en un replay.
-- `RabbitTemplate` es bloqueante, así que se ejecuta en `Schedulers.boundedElastic()` con timeout de 3 s. Si falla, se registra el error y la respuesta HTTP no se afecta, porque la decisión ya fue persistida.
-- `ApprovedApplicationListener` simula un sistema consumidor que registra el evento.
+- **Activación.** Puerto `CreditEventPublisher` con dos implementaciones, elegidas por `app.rabbitmq.enabled` (falso por defecto): `NoOpCreditEventPublisher` y `RabbitCreditEventPublisher`.
+- **Topología.**
+  - Exchange **topic** durable `credit.events` → cola durable `credit.application.approved.audit`. Con un exchange topic, otros sistemas crean sus propias colas sin modificar este servicio.
+  - Lo que falla en la cola va al exchange `credit.events.dlx` y de ahí a `credit.application.approved.audit.dlq`. La cola usa su propio nombre como routing key hacia el DLX, así que cada consumidor tiene su propia DLQ.
+- **Contrato.** JSON `CreditApplicationApprovedEvent` (`eventType`, referencia, cliente, monto, plazo y `approvedAt`) con `messageId = applicationReference`. El `messageId` es obligatorio: un mensaje sin él no cumple el contrato y termina en la DLQ.
+- **Publicación.**
+  - Se publica después del commit y solo para solicitudes nuevas aprobadas, nunca en un replay.
+  - Con *publisher confirms*, solo se da por publicado lo que el broker confirmó.
+  - Las fallas se reintentan 2 veces con espera corta (desde 100 ms), y el total queda acotado a 3 s.
+  - `RabbitTemplate` es bloqueante, así que corre en `Schedulers.boundedElastic()`.
+  - Si aun así falla, se registra el error y la respuesta HTTP no cambia, porque la decisión ya está persistida.
+- **Duplicados.**
+  - RabbitMQ entrega *at-least-once*: el mismo mensaje puede llegar más de una vez. El consumidor guarda cada aprobación en `approved_application_audit` con `message_id` como clave primaria, así que un duplicado viola la PK y se descarta sin error.
+  - Es la misma estrategia que RF05 y funciona aunque dos entregas lleguen a la vez.
+  - Solo `DuplicateKeyException` cuenta como duplicado; cualquier otro error de base de datos se reintenta.
+- **Errores en el consumidor.** Hay 3 intentos en memoria, con esperas de 1 s y 2 s. Si siguen fallando, el mensaje se rechaza sin reencolar (`default-requeue-rejected: false`) y RabbitMQ lo mueve a la DLQ. Así, un mensaje que siempre falla no queda reintentándose para siempre.
 
-**Trade-offs y riesgos.** Es *best-effort*: si RabbitMQ cae justo después del commit, el evento se pierde (problema de *dual write*). La solución robusta es el **patrón transactional outbox**: guardar el evento en una tabla en la misma transacción y publicarlo con un proceso aparte con reintentos. Quedó fuera para respetar el alcance.
+**Trade-offs y riesgos.**
+- **Pérdida del evento ante caídas largas.** Si RabbitMQ sigue caído tras los reintentos, o si el proceso se cae justo después del commit, el evento se pierde (problema de *dual write*). La solución es el **transactional outbox**: guardar el evento en una tabla dentro de la misma transacción y publicarlo con un proceso aparte. Quedó fuera por alcance.
+- **Latencia con el broker caído.** Cada aprobación tarda entre 0,25 y 0,45 s más por los reintentos (antes, ~6 ms). Se acepta a cambio de tolerar fallas momentáneas.
+- **Consumidor bloqueado durante los reintentos.** Los reintentos en memoria detienen al consumidor unos 3 s por cada mensaje que falla. Para esperas largas se usaría una cola de reintento con TTL.
+- **La DLQ no se reprocesa sola.** Sus mensajes se revisan y se reenvían desde la UI de administración.
+- **Ubicación de la tabla de auditoría.** Vive en la misma base que el core solo porque el consumidor es un ejemplo. En un sistema real estaría en la base del consumidor.
 
-**Validación.** Probado manualmente con `docker compose`:
-- una aprobada genera el log de publicación y el del consumidor;
-- una rechazada no publica nada;
-- con RabbitMQ detenido, la solicitud se aprueba igual (201 en ~6 ms) y el error queda en el log.
+**Validación.**
+- **Prueba automatizada.** `RabbitMessagingIntegrationTest` (6 pruebas) corre contra un RabbitMQ real con Testcontainers y se omite si no hay Docker. Cubre:
+  - aprobada publicada y registrada;
+  - rechazada no publicada;
+  - duplicado registrado una sola vez y sin reintentos;
+  - falla transitoria reintentada y luego procesada;
+  - falla permanente que termina en la DLQ tras 3 intentos;
+  - mensaje sin `messageId` que termina en la DLQ.
+- **Comprobar lo que no ocurre.** Para demostrar que algo *no* pasó sin depender de esperas fijas, las pruebas envían al final un mensaje "barrera". Con un solo consumidor, los mensajes se procesan en orden: si la barrera ya quedó registrada, los anteriores también se procesaron.
+- **Mutación.** Rompí a propósito la idempotencia, la DLQ, los reintentos y el filtro de aprobadas. En los cuatro casos falla al menos una prueba.
+- **Prueba manual con `docker compose`.** Se probaron la aprobada, la rechazada, el replay, un duplicado enviado con la API de administración y el broker detenido (201 en 0,25-0,45 s, con el error en el log). Al volver el broker, la publicación se recuperó sola.
 
 ---
 
@@ -247,6 +277,7 @@ Las reglas se evalúan en este orden: monto → plazo → cliente existe → cli
 | Caso de uso | `CreditApplicationServiceTest` (7) | Orquestación: aprobación + evento, rechazo sin reservar ni publicar, reserva fallida, replay, conflicto, carrera en el UNIQUE |
 | Integración HTTP + BD | `CreditApplicationApiIntegrationTest` (8) | RF01-RF06 de punta a punta, códigos HTTP y efecto real sobre el cupo |
 | Concurrencia | `ConcurrencyIntegrationTest` (2) | RF04 y RF05 simultáneos, deterministas |
+| Mensajería (opcional) | `RabbitMessagingIntegrationTest` (6) | Publicación, consumo idempotente, reintentos y DLQ contra un RabbitMQ real (Testcontainers); se omite sin Docker |
 | Frontend | Vitest (13) | Servicio HTTP (replay por header), render del resultado, línea de evaluación (parada según la razón), manejo del 409 y del backend caído |
 
 Validaciones adicionales:
@@ -261,12 +292,12 @@ Validaciones adicionales:
 En orden de prioridad:
 
 1. **PostgreSQL + Flyway** con `docker compose` para todo el stack. Permite varias instancias y R2DBC no bloqueante real.
-2. **Transactional outbox** para garantizar la publicación de eventos, más reintentos y *dead letter queue* en el consumidor.
+2. **Transactional outbox** para garantizar la publicación del evento aunque RabbitMQ siga caído o el proceso se caiga después del commit.
 3. **Seguridad:** autenticación (OAuth2/JWT), autorización por canal y rate limiting.
 4. **Observabilidad:** Actuator (health, incluido el de RabbitMQ), métricas de aprobadas/rechazadas, trazas y logs estructurados con un *correlation id*.
 5. Mapear el timeout de lock a un **503 con `Retry-After`** en lugar de un 500.
 6. **Paginación** por cursor (`processedAt`, `id`) en recientes y filtros por cliente o estado.
 7. **OpenAPI/Swagger** para documentar el contrato.
-8. **Testcontainers** para correr la integración contra PostgreSQL y RabbitMQ reales.
+8. **Testcontainers** también para PostgreSQL (RabbitMQ ya se prueba así).
 9. **E2E del frontend** (Playwright) y `Dockerfile` para backend y frontend.
 10. Auditoría o historial de los conflictos 409 recibidos (hoy solo se responden).
