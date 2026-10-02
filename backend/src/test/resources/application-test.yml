@@ -1,0 +1,3 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///credit-core-test;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000

@@ -10,6 +10,7 @@ import com.bancoias.credit.domain.Customer;
 import com.bancoias.credit.domain.RejectionReason;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -105,7 +106,8 @@ public class CreditApplicationService {
 		return Mono.error(new ApplicationReferenceConflictException(existing));
 	}
 
+	/** Se trunca a microsegundos, la precision con la que la base de datos almacena el timestamp. */
 	private OffsetDateTime now() {
-		return OffsetDateTime.now(clock);
+		return OffsetDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
 	}
 }
