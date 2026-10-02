@@ -48,8 +48,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		ex.getFieldErrors().forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
 
 		var problem = ex.getBody();
-		problem.setTitle("Solicitud invalida");
-		problem.setDetail("Uno o mas campos no son validos");
+		problem.setTitle("Solicitud inválida");
+		problem.setDetail("Uno o más campos no son válidos");
 		problem.setProperty("errors", errors);
 		return handleExceptionInternal(ex, problem, headers, status, exchange);
 	}
